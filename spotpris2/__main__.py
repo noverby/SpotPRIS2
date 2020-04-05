@@ -1,18 +1,18 @@
+import argparse
 import sys
+import webbrowser
+from configparser import ConfigParser
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
+import pkg_resources
+from appdirs import AppDirs
 from gi.repository import GLib
 from pydbus import SessionBus
-from spotipy import SpotifyOAuth, Spotify
-from appdirs import AppDirs
-from configparser import ConfigParser
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from spotipy import Spotify, SpotifyOAuth
 
-from .util import create_playback_state
-from .BusManager import SingleBusManager, MultiBusManager
 from . import MediaPlayer2
-import pkg_resources
-import webbrowser
-import argparse
+from .BusManager import MultiBusManager, SingleBusManager
+from .util import create_playback_state
 
 ifaces = ["org.mpris.MediaPlayer2",
           "org.mpris.MediaPlayer2.Player"]  # , "org.mpris.MediaPlayer2.Playlists", "org.mpris.MediaPlayer2.TrackList"]
@@ -22,16 +22,25 @@ scope = "user-modify-playback-state,user-read-playback-state,user-read-currently
 
 def main():
     parser = argparse.ArgumentParser(description="Control Spotify Connect devices using MPRIS2")
-    parser.add_argument('-d', '--devices', nargs='+', metavar="DEVICE",
+    parser.add_argument('-d',
+                        '--devices',
+                        nargs='+',
+                        metavar="DEVICE",
                         help="Only create interfaces for the listed devices")
     parser.add_argument('-i', '--ignore', nargs='+', metavar="DEVICE", help="Ignore the listed devices")
     parser.add_argument('-a', '--auto', action="store_true", help="Automatically control the active device")
-    parser.add_argument('-l', '--list', nargs='?', choices=["name", "id"], const="name",
+    parser.add_argument('-l',
+                        '--list',
+                        nargs='?',
+                        choices=["name", "id"],
+                        const="name",
                         help="List available devices and exit")
+    parser.add_argument('-n', '--name', default="spotpris", help="Change name of application")
     args = parser.parse_args()
 
-    MediaPlayer2.dbus = [pkg_resources.resource_string(__name__, f"mpris/{iface}.xml").decode('utf-8') for iface in
-                         ifaces]
+    MediaPlayer2.dbus = [
+        pkg_resources.resource_string(__name__, f"mpris/{iface}.xml").decode('utf-8') for iface in ifaces
+    ]
 
     loop = GLib.MainLoop()
 
@@ -53,9 +62,9 @@ def main():
         return
 
     if not args.auto:
-        manager = MultiBusManager(sp, args.devices, args.ignore)
+        manager = MultiBusManager(sp, args.devices, args.ignore, args.name)
     else:
-        manager = SingleBusManager(sp)
+        manager = SingleBusManager(sp, args.name)
 
     def timeout_handler():
         manager.main_loop()
