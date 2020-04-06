@@ -32,6 +32,7 @@ Options
   -a, --auto            Automatically control the active device
   -l [{name,id}], --list [{name,id}]
                         List available devices and exit
+  -n, --name            Change name of application
 ```
 
 In normal mode SpotPRIS2 creates one MPRIS2 interface for each Spotify Connect device connected to your account.
